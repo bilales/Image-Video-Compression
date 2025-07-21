@@ -1,6 +1,6 @@
 # JPEG and MPEG-2 Compression From Scratch
 
-![Compression In Action]([https://imgur.com/a/a9JbAtW])
+![Compression In Action]((https://imgur.com/a/jpeg-compression-github-bilales-a9JbAtW))
 
 ## 📖 Overview
 
