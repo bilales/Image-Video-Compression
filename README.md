@@ -1,10 +1,10 @@
 # JPEG and MPEG-2 Compression From Scratch
 
-![Compression In Action]((https://imgur.com/a/jpeg-compression-github-bilales-a9JbAtW))
+![Compression In Action](https://i.imgur.com/a9JbAtW.png)
 
 ## 📖 Overview
 
-This project is a from-scratch implementation of the **JPEG** and **MPEG-2** compression standards. It was developed to explore the inner workings of lossy compression algorithms and to gain a deeper understanding of digital image and video processing.
+This project is a from-scratch implementation of the **JPEG** and **MPEG-2** compression standards using MATLAB. It was developed to explore the inner workings of lossy compression algorithms and to gain a deeper understanding of digital image and video processing.
 
 ---
 
@@ -52,23 +52,23 @@ A sequence of these frames is called a **Group of Pictures (GOP)**.
 
 ### Prerequisites
 
-* [List any dependencies here, e.g., Python 3.8+, NumPy, etc.]
+* MATLAB R2021a or later.
+* Image Processing Toolbox.
 
 ### Installation & Usage
 
 1.  Clone the repository:
     ```bash
     git clone [https://github.com/](https://github.com/)[your-username]/[your-repo-name].git
-    cd [your-repo-name]
     ```
-2.  [Add any further installation or setup steps, e.g., `pip install -r requirements.txt`]
-3.  To compress an image:
-    ```bash
-    python compress_jpeg.py --input my_image.bmp --output compressed_image.jpg
+2.  Open MATLAB and navigate to the cloned repository's directory.
+3.  To compress an image, run the `compress_jpeg` script:
+    ```matlab
+    compress_jpeg('my_image.bmp', 'compressed_image.jpg');
     ```
-4.  To decompress an image:
-    ```bash
-    python decompress_jpeg.py --input compressed_image.jpg --output restored_image.bmp
+4.  To decompress an image, run the `decompress_jpeg` script:
+    ```matlab
+    decompress_jpeg('compressed_image.jpg', 'restored_image.bmp');
     ```
 5.  [Add similar usage instructions for your MPEG-2 implementation]
 
