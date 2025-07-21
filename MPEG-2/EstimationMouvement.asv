@@ -1,0 +1,122 @@
+
+% TP Codages JPEG et MPEG-2 - 3SN-M - 2022
+
+%--------------------------------------------------------------------------
+% Fonction d'estimation du mouvement par "block-matching"
+%--------------------------------------------------------------------------
+% MVr = EstimationMouvement(Ic,Ir)
+%
+% sortie  : MVdr = matrice des vecteurs de deplacements relatifs
+% 
+% entrees : Ic = image courante
+%           Ir = image de reference
+%--------------------------------------------------------------------------
+function MVr = EstimationMouvement(Ic, Ir)
+    % Taille du macro-bloc
+    taille_bloc = 16;
+    [h, w] = size(Ic);
+    MVr = zeros(h / taille_bloc, w / taille_bloc, 2); % matrice des vecteurs de déplacement
+
+    % Parcours de chaque macro-bloc de l'image courante
+    for i = 1:taille_bloc:h
+        for j = 1:taille_bloc:w
+            % Extraire le macro-bloc dans l'image courante
+            MB_IC = Ic(i:i+taille_bloc-1, j:j+taille_bloc-1);
+
+            Vp = [i, j];  % Position de départ pour le macro-bloc
+
+            % Calcul du vecteur de mouvement pour ce macro-bloc
+            Vm = CSAMacroBloc(MB_IC, Vp, Ir);
+            % Stockage du vecteur de mouvement dans la matrice MVr
+            MVr((i-1)/taille_bloc + 1, (j-1)/taille_bloc + 1, :) = Vm - Vp;
+        end
+    end
+end
+
+%--------------------------------------------------------------------------
+% Fonction de recherche par 'Cross Search Algorithm' :         
+%   - Recherche pour un macro-bloc de l'image courante
+%--------------------------------------------------------------------------
+% Vm = CSAMacroBloc(MBc, Vp, Iref)
+%
+% sorties : Vm = vecteur de mouvement 
+% 
+% entrées : Mbc = macro-bloc dans l'image courante Ic
+%           Vp = vecteur de prediction (point de depart du MacroBloc)
+%           Iref = image de reference (qui sera conservee dans le GOP)
+%--------------------------------------------------------------------------
+
+function Vm = CSAMacroBloc(MB_IC, Vp, IRef)
+    % Initialiser la position du macro-bloc de référence
+    Vm = Vp;
+    [size_x_IRef, size_y_IRef] = size(IRef);
+
+    % Calculer l'EQM au centre
+    EQMC = EQMMacrocBlocVoisin(MB_IC, IRef, size_x_IRef, size_y_IRef, Vp(1), Vp(2), 'centre');
+
+    while true
+        % Calcul de l'EQM pour les voisins (haut, gauche, droite, bas)
+        EQMH = EQMMacrocBlocVoisin(MB_IC, IRef, size_x_IRef, size_y_IRef, Vm(1)-1, Vm(2), 'haut');
+        EQMG = EQMMacrocBlocVoisin(MB_IC, IRef, size_x_IRef, size_y_IRef, Vm(1), Vm(2)-1, 'gauche');
+        EQMD = EQMMacrocBlocVoisin(MB_IC, IRef, size_x_IRef, size_y_IRef, Vm(1), Vm(2)+1, 'droite');
+        EQMB = EQMMacrocBlocVoisin(MB_IC, IRef, size_x_IRef, size_y_IRef, Vm(1)+1, Vm(2), 'bas');
+        
+        % voisin avec l'erreur minimale
+        [min_EQM, idx] = min([EQMC, EQMH, EQMG, EQMD, EQMB]);
+        
+        % Vérifier si on a atteint un minimum local
+        if idx == 1  % L'erreur minimale est au centre, l'indice 1 correspond au cenrte
+            break;
+        else
+            % Mettre à jour la position du macro-bloc de recherche
+            switch idx
+                case 2
+                    Vm = [Vm(1)-1, Vm(2)]; % haut
+                case 3
+                    Vm = [Vm(1), Vm(2)-1]; % gauche
+                case 4
+                    Vm = [Vm(1), Vm(2)+1]; % droite
+                case 5
+                    Vm = [Vm(1)+1, Vm(2)]; % bas
+            end
+            % Mettre à jour l'EQM centrale pour le prochain tour
+            EQMC = min_EQM;
+        end
+    end
+end
+
+%--------------------------------------------------------------------------
+% Fonction de calcul de l'EQM avec differents voisins 
+% dans l'image de reference
+%--------------------------------------------------------------------------
+% EQM = EQMMacrocBlocVoisin(MB_IC_V,IRef,size_x_Ref,size_y_Ref,coordx,coordy,voisin)
+%
+% sortie  : EQM = erreur quadratique moyenne entre macro-blocs
+% 
+% entrées : MB_IC_V = macro-bloc dans l'image courante (vectorise)
+%           Ir = Image de reference
+%           size_x_Ir = nombre de lignes de Ir (pour effets de bords)
+%           size_y_Ir = nombre de colonnes de Ir (pour effets de bords)
+%           coordx = les 16 coordonnees du bloc suivant x
+%           coordy = les 16 coordonnees du bloc suivant y
+%           voisin = choix du voisin pour decaler le macro-bloc dans Ir
+%                    ('haut', 'gauche', 'centre', 'droite', bas', ...)
+%--------------------------------------------------------------------------
+
+function EQM = EQMMacrocBlocVoisin(MB_IC_V, Ir, size_x_Ir, size_y_Ir, coordx, coordy, voisin)
+    % Taille du macro-bloc
+    taille_bloc = 16;
+
+    % Assurer que les coordonnées restent dans les limites
+    if coordx < 1 || coordx + taille_bloc - 1 > size_x_Ir || coordy < 1 || coordy + taille_bloc - 1 > size_y_Ir
+        EQM = inf; % Erreur infinie pour les blocs en dehors des limites
+        return;
+    end
+
+    % Extraire le macro-bloc dans l'image de référence
+    MB_Ref = Ir(coordx:coordx+taille_bloc-1, coordy:coordy+taille_bloc-1);
+
+    % Calcul de l'erreur quadratique moyenne entre les deux macro-blocs
+    diff = double(MB_IC_V) - double(MB_Ref);
+    EQM = mean(diff(:).^2);
+end
