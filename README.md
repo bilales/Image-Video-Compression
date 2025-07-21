@@ -1,6 +1,6 @@
 # JPEG and MPEG-2 Compression From Scratch
 
-![Compression In Action](https://placehold.co/600x400?text=Your+Cool+Visual+Here)
+![Compression In Action]([https://imgur.com/a/a9JbAtW])
 
 ## 📖 Overview
 
